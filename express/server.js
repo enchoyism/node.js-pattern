@@ -13,7 +13,7 @@ const yamlJS = require('yamljs');
 const serverConf = require('configs/server');
 const logger = require('lib/logger')('server');
 
-Mongoose.Promise = global.Promise;
+mongoose.Promise = global.Promise;
 
 class Server {
 	static bootstrap() {
@@ -66,7 +66,7 @@ class Server {
 		logger.info('database mysql client created.');
 
 		// mongo
-		mongoose.connect(serverConf.mongo.uri, serverConf.mongoConf.options);
+		mongoose.connect(serverConf.mongo.uri, serverConf.mongo.options);
 
 		const mongo = mongoose.connection;
 
