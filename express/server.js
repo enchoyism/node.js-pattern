@@ -1,6 +1,5 @@
 'use strict';
 
-const async = require('async');
 const redis = require('ioredis');
 const mysql = require('mysql');
 const mongoose = require('mongoose');
@@ -13,6 +12,8 @@ const yamlJS = require('yamljs');
 
 const serverConf = require('configs/server');
 const logger = require('lib/logger')('server');
+
+Mongoose.Promise = global.Promise;
 
 class Server {
 	static bootstrap() {
@@ -65,28 +66,17 @@ class Server {
 		logger.info('database mysql client created.');
 
 		// mongo
-		let connRetryCount = 0;
-		const mongoConnect = () => {
-			mongoose.connect(serverConf.mongo);
+		mongoose.connect(serverConf.mongo.uri, serverConf.mongoConf.options);
 
-			const mongo = mongoose.connection;
+		const mongo = mongoose.connection;
 
+		mongo.on('error', (error) => {
+			logger.error('mongo connection error');
+		});
+		mongo.on('open', () => {
 			this.app.set('mongo', mongo);
+		});
 
-			mongo.on('error', (error) => {
-				logger.error('mongo connection error');
-			});
-
-			mongo.on('open', () => {
-				this.app.set('mongo', mongo);
-			});
-
-			mongo.on('disconnected', () => {
-				setTimeout(mongoConnect, 500);
-			});
-		};
-
-		mongoConnect();
 		logger.info('database mongo client created.');
 	};
 

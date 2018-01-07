@@ -32,8 +32,16 @@ module.exports = {
             database: '{YOUR_MYSQL_DATABASE}'
         }
     },
-    mongo: {
-        local: 'mongodb://127.0.0.1:27017/{YOUR_MONGO_DATABASE}'
+    local: {
+        uri: 'mongodb://127.0.0.1:27017/nodejs',
+        options: {
+            useMongoClient: true,
+            autoIndex: false,
+            reconnectTries: 10,
+            reconnectInterval: 500,
+            poolSize: 10,
+            bufferMaxEntries: 0
+        }
     }
 };
 ```

@@ -45,6 +45,6 @@ serverConf.mysql.user = privateConf.mysql[serverConf.node_env].user;
 serverConf.mysql.password = privateConf.mysql[serverConf.node_env].password;
 serverConf.mysql.database = privateConf.mysql[serverConf.node_env].database;
 
-serverConf.mongo = privateConf.mongo[serverConf.node_env];
+serverConf.mongo = privateConf.mongo;
 
 module.exports = serverConf;

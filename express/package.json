@@ -1,7 +1,10 @@
 {
-  "name": "nodejs-pattern",
+  "name": "nodejs-pattern (Express.js)",
   "version": "0.0.0",
-  "private": true,
+  "author": {
+    "name": "enchoyism",
+    "email": "enchoyism@gmail.com"
+  },
   "scripts": {
     "start": "export NODE_ENV=local & export NODE_PATH=. & export DEBUG=*nodejs-pattern* & node ./bin/www"
   },
@@ -12,7 +15,6 @@
     "debug": "^2.6.9",
     "ejs": "^2.5.7",
     "express": "^4.15.5",
-    "generic-pool": "^3.4.0",
     "ioredis": "^3.2.2",
     "mongoose": "^4.8.7",
     "mysql": "^2.15.0",
