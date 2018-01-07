@@ -1,0 +1,36 @@
+swagger: "2.0"
+
+info:
+  version: "0.0.1"
+  title: nodejs-pattern
+  description: My favorite express.js webapp basic pattern
+
+host: localhost:3000
+
+basePath: /api
+
+schemes:
+  - http
+
+consumes:
+  - application/json
+
+produces:
+  - application/json
+
+paths:
+  /index:
+    $ref: "http://localhost:3000/swagger/index.yaml"
+definitions:
+  PublicErrorResponse:
+    type: object
+    required:
+      - errorCode
+      - errorMessage
+    properties:
+      errorCode:
+        title: Server own error code
+        type: string
+      errorMessage:
+        title: Server own error detail message
+        type: string

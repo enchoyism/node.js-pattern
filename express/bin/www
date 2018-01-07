@@ -1,0 +1,96 @@
+#!/usr/bin/env node
+
+'use strict';
+
+const http = require('http');
+
+const logger = require('lib/logger')('bin/www');
+const serverConf = require('configs/server');
+const Server = require('server');
+
+const normalizePort = (val) => {
+    const port = parseInt(val, 10);
+
+    if (isNaN(port)) { return val; }
+    if (port >= 0) { return port; }
+
+    return false;
+};
+
+const port = normalizePort(serverConf.port || '3000');
+
+const onError = (error) => {
+    if (error.syscall !== 'listen') { throw error; }
+
+    const bind = typeof port === 'string' ? 'Pipe ' + httpPort : `Port ${port}`;
+
+    switch (error.code) {
+        case 'EACCES':
+            logger.error(`${bind} requires elevated privileges`);
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            logger.error(`${bind} is already in use`);
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
+};
+
+const server = Server.bootstrap()
+const app = server.app;
+app.set('port', port);
+
+const httpServer = http.createServer(app);
+
+const onListening = () => {
+    const addr = httpServer.address();
+    const bind = typeof addr === 'string'
+        ? 'pipe ' + addr
+        : 'port ' + addr.port;
+    logger.info(`Listening on ${bind}`);
+};
+
+httpServer.listen(port);
+httpServer.on('error', onError);
+httpServer.on('listening', onListening);
+
+const close = (callback) => {
+    logger.info('closing server');
+
+    setTimeout(() => {
+        server.destroy((error) => {
+            if (error) {
+                logger.error(`server destroy error: ${error.stack}`);
+            }
+
+            http.close(() => {
+                logger.info('closed http server');
+                callback();
+            });
+        });
+    }, 500);
+};
+
+process.on('uncaughtException', (error) => {
+    logger.error(`process uncaughtException: ${error.stack}`);
+
+    close(() => {
+        setTimeout(() => {
+            logger.info('shutdown server, process exit');
+            process.exit(1);
+        }, 500);
+    });
+});
+
+process.on('SIGTERM' || 'SIGINT', () => {
+    logger.info('process event SIGTERM OR SIGINT');
+
+    close(() => {
+        setTimeout(() => {
+            logger.info('shutdown server, process exit');
+            process.exit(0);
+        }, 500);
+    });
+});

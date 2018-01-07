@@ -1,0 +1,16 @@
+npm-debug.log*
+configs/private.js
+
+node_modules
+logs
+pids
+public
+
+.npm
+
+.node_repl_history
+
+.idea
+.buildpath
+.project
+.settings

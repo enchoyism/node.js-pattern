@@ -1,0 +1,21 @@
+get:
+  summary: welcome
+  description: welcome greetings
+  tags:
+    - index
+  responses:
+    200:
+      description: success
+      schema:
+        type: object
+        required:
+          - message
+        properties:
+          message:
+            title: welcome greetings
+            type: string
+
+    default:
+      description: Server Error ( http status code !== 200 ) <br> Ref PublicErrorResponse Model
+      schema:
+        $ref: "#/definitions/error"
