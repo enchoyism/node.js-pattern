@@ -2,8 +2,10 @@
 
 const redis = require('ioredis');
 const mysql = require('mysql');
+const genericPool = require('generic-pool');
 const mongoose = require('mongoose');
 const express = require('express');
+const asyncify = require('express-asyncify');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
@@ -13,14 +15,12 @@ const yamlJS = require('yamljs');
 const serverConf = require('configs/server');
 const logger = require('lib/logger')('server');
 
-mongoose.Promise = global.Promise;
-
 class Server {
 	static bootstrap() {
 		return new Server();
 	}
 
-	destroy(callback) {
+	async destroy() {
 		const redis = this.app.get('redis');
 		const mongo = this.app.get('mongo');
 		const mysql = this.app.get('mysql');
@@ -28,42 +28,83 @@ class Server {
 		if (redis) {
 			redis.quit();
 			delete this.app.settings.redis;
-			logger.info('database redis client closed');
+			logger.info('database redis client destroyed');
 		}
 
 		if (mongo) {
 			mongo.close();
 			delete this.app.setting.mongo;
-			logger.info('database mongo client closed');
+			logger.info('database mongo client destroyed');
 		}
 
 		if (mysql) {
-			return mysql.connPool.drain().then(() => {
-				mysql.connPool.clear();
-				delete this.app.settings.mysql;
-				callback();
-			});
+			await mysql.connectionPool.drain();
+			mysql.connectionPool.clear();
+			delete this.app.settings.mysql;
+			logger.info('database mysql connection pool destroyed');
 		}
-
-		callback();
 	}
 
 	constructor() {
-		this.app = express();
+		this.app = asyncify(express());
 		this._databases();
 		this._configs();
 		this._middlewares();
 		this._routes();
 	}
 
-	_databases() {
+	async _databases() {
 		// redis
 		this.app.set('redis', new redis(serverConf.redis));
 		logger.info('database redis client created.');
 
 		// mysql
-		this.app.set('mysql', mysql.createPool(serverConf.mysql));
-		logger.info('database mysql client created.');
+		const factory = {
+            create: () => {
+                return new Promise((resolve, reject) => {
+                    const connection = mysql.createConnection(serverConf.mysql);
+
+                    connection.connect((error) => {
+                        if (error) {
+                            return reject(error);
+                        }
+
+                        resolve(connection);
+                    });
+
+                    connection.on('error', (error) => {
+                        throw error;
+                    });
+                });
+            },
+            destroy: (connection) => {
+                return new Promise((resolve) => {
+                    connection.destroy();
+                    resolve();
+                });
+            }
+        };
+
+		const options = {
+            min: 0, max: 10,
+            acquireTimeoutMillis: 3000,
+            idleTimeoutMillis : 30000
+        };
+
+        const connectionPool = genericPool.createPool(factory, options);
+
+        connectionPool.on('factoryCreateError', (error) => {
+            logger.error(`factory create error: ${error}`);
+            throw error;
+        }).on('factoryDestroyError', (error) => {
+            logger.error(`factory destroy error: ${error}`);
+            throw error;
+        });
+
+        this.app.set('mysql', { connectionPool: connectionPool });
+
+		// this.app.set('mysql', mysql.createPool(serverConf.mysql));
+		logger.info('database mysql connection pool created.');
 
 		// mongo
 		mongoose.connect(serverConf.mongo.uri, serverConf.mongo.options);

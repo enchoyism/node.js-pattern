@@ -15,9 +15,14 @@
     "debug": "^2.6.9",
     "ejs": "^2.5.7",
     "express": "^4.15.5",
+    "express-asyncify": "^1.0.0",
+    "generic-pool": "^3.4.0",
     "ioredis": "^3.2.2",
+    "microtime-nodejs": "^1.0.0",
     "mongoose": "^4.8.7",
     "mysql": "^2.15.0",
+    "parseurl": "^1.3.2",
+    "pify": "^3.0.0",
     "swagger-ui-express": "^2.0.7",
     "yamljs": "^0.3.0"
   }

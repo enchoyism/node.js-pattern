@@ -3,6 +3,7 @@
 'use strict';
 
 const http = require('http');
+const pify = require('pify');
 
 const logger = require('lib/logger')('bin/www');
 const serverConf = require('configs/server');
@@ -56,41 +57,32 @@ httpServer.listen(port);
 httpServer.on('error', onError);
 httpServer.on('listening', onListening);
 
-const close = (callback) => {
+const close = () => {
     logger.info('closing server');
 
-    setTimeout(() => {
-        server.destroy((error) => {
-            if (error) {
-                logger.error(`server destroy error: ${error.stack}`);
-            }
-
-            http.close(() => {
-                logger.info('closed http server');
-                callback();
-            });
-        });
+    setTimeout(async () => {
+        server.destroy();
+        await pify(httpServer.close)();
+        logger.info('closed http server');
     }, 500);
 };
 
 process.on('uncaughtException', (error) => {
     logger.error(`process uncaughtException: ${error.stack}`);
 
-    close(() => {
-        setTimeout(() => {
-            logger.info('shutdown server, process exit');
-            process.exit(1);
-        }, 500);
-    });
+    close();
+    setTimeout(() => {
+        logger.info('shutdown server, process exit');
+        process.exit(1);
+    }, 500);
 });
 
 process.on('SIGTERM' || 'SIGINT', () => {
     logger.info('process event SIGTERM OR SIGINT');
 
-    close(() => {
-        setTimeout(() => {
-            logger.info('shutdown server, process exit');
-            process.exit(0);
-        }, 500);
-    });
+    close();
+    setTimeout(() => {
+        logger.info('shutdown server, process exit');
+        process.exit(0);
+    }, 500);
 });
