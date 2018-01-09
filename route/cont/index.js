@@ -1,6 +1,6 @@
 'use strict';
 
-const serverConf = require('configs/server.js');
+const serverConf = require('config/server.js');
 
 module.exports = class ContIndex {
     getIndex(req, res, callback) {

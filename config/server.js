@@ -1,6 +1,6 @@
 'use strict';
 
-const privateConf = require('configs/private');
+const privateConf = require('config/private');
 
 const serverConf = {
 	name: 'nodejs-pattern',
@@ -13,10 +13,10 @@ const serverConf = {
 	mysql: {},
 	mongo: {},
 
-	routes: []
+	route: []
 };
 
-serverConf.routes.push(
+serverConf.route.push(
 	// api
 	{
 		module: 'api/index',
@@ -26,12 +26,12 @@ serverConf.routes.push(
 	},
 
 	// controller
-	{
-		module: 'cont/index',
-		'/index': {
-			get: { handler: 'getIndex' }
-		}
-	}
+	// {
+	// 	module: 'cont/index',
+	// 	'/index': {
+	// 		get: { handler: 'getIndex' }
+	// 	}
+	// }
 );
 
 serverConf.redis.host = privateConf.redis[serverConf.node_env].host;
@@ -45,6 +45,6 @@ serverConf.mysql.user = privateConf.mysql[serverConf.node_env].user;
 serverConf.mysql.password = privateConf.mysql[serverConf.node_env].password;
 serverConf.mysql.database = privateConf.mysql[serverConf.node_env].database;
 
-serverConf.mongo = privateConf.mongo;
+// serverConf.mongo = privateConf.mongo;
 
 module.exports = serverConf;

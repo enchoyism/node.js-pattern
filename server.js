@@ -3,7 +3,6 @@
 const redis = require('ioredis');
 const mysql = require('mysql');
 const genericPool = require('generic-pool');
-const mongoose = require('mongoose');
 const express = require('express');
 const asyncify = require('express-asyncify');
 const path = require('path');
@@ -12,8 +11,9 @@ const bodyParser = require('body-parser');
 const swaggerUI = require('swagger-ui-express');
 const yamlJS = require('yamljs');
 
-const serverConf = require('configs/server');
+const serverConf = require('config/server');
 const logger = require('lib/logger')('server');
+const errorHandler = require('lib/errorHandler');
 
 class Server {
 	static bootstrap() {
@@ -22,19 +22,12 @@ class Server {
 
 	async destroy() {
 		const redis = this.app.get('redis');
-		const mongo = this.app.get('mongo');
 		const mysql = this.app.get('mysql');
 
 		if (redis) {
 			redis.quit();
 			delete this.app.settings.redis;
 			logger.info('database redis client destroyed');
-		}
-
-		if (mongo) {
-			mongo.close();
-			delete this.app.setting.mongo;
-			logger.info('database mongo client destroyed');
 		}
 
 		if (mysql) {
@@ -47,13 +40,14 @@ class Server {
 
 	constructor() {
 		this.app = asyncify(express());
-		this._databases();
-		this._configs();
-		this._middlewares();
-		this._routes();
+		this._database();
+		this._config();
+		this._middleware();
+		this._route();
+        this._etc();
 	}
 
-	async _databases() {
+	async _database() {
 		// redis
 		this.app.set('redis', new redis(serverConf.redis));
 		logger.info('database redis client created.');
@@ -91,9 +85,9 @@ class Server {
             idleTimeoutMillis : 30000
         };
 
-        const connectionPool = genericPool.createPool(factory, options);
+        const pool = genericPool.createPool(factory, options);
 
-        connectionPool.on('factoryCreateError', (error) => {
+        pool.on('factoryCreateError', (error) => {
             logger.error(`factory create error: ${error}`);
             throw error;
         }).on('factoryDestroyError', (error) => {
@@ -101,33 +95,63 @@ class Server {
             throw error;
         });
 
-        this.app.set('mysql', { connectionPool: connectionPool });
+        const rollbackTransaction = (connection) => {
+            return new Promise((resolve, reject) => {
+                connection.rollback(() => {
+                    pool.release(connection);
+                    resolve();
+                });
+            });
+        };
 
-		// this.app.set('mysql', mysql.createPool(serverConf.mysql));
-		logger.info('database mysql connection pool created.');
+        const beginTransaction = (connection) => {
+            return new Promise((resolve, reject) => {
+                connection.beginTransaction((error) => {
+                    if (error) {
+                        return connection.rollback(() => {
+                            pool.release(connection);
+                            return reject(error);
+                        });
+                    }
 
-		// mongo
-		mongoose.connect(serverConf.mongo.uri, serverConf.mongo.options);
+                    resolve();
+                });
+            });
+        };
 
-		const mongo = mongoose.connection;
+        const commitTransaction = (connection) => {
+            return new Promise((resolve, reject) => {
+                connection.commit((error) => {
+                    if (error) {
+                        return connection.rollback(() => {
+                            pool.release(connection);
+                            return reject(error);
+                        });
+                    }
 
-		mongo.on('error', (error) => {
-			logger.error('mongo connection error');
-		});
-		mongo.on('open', () => {
-			this.app.set('mongo', mongo);
-		});
+                    pool.release(connection);
+                    resolve();
+                })
+            });
+        };
 
-		logger.info('database mongo client created.');
+        this.app.set('mysql', {
+            pool: pool, conn: undefined,
+            beginTransaction: beginTransaction,
+            rollbackTransaction: rollbackTransaction,
+            commitTransaction: commitTransaction
+        });
+
+        logger.info('database mysql connection pool created.');
 	};
 
-	_configs() {
+	_config() {
 		this.app.get('/favicon.ico', (req, res) => {
             res.sendStatus(204);
         });
 
         // view engine setup
-        this.app.set('views', path.join(serverConf.node_path, 'views'));
+        this.app.set('views', path.join(serverConf.node_path, 'view'));
         this.app.set('view engine', 'ejs');
 
         this.app.use(bodyParser.json({ limit: '10mb' }));
@@ -136,22 +160,26 @@ class Server {
         }));
 
         this.app.use(cookieParser());
+    }
+
+    _middleware() {
+        // swagger
         this.app.use('/swagger', express.static(path.join(serverConf.node_path, 'public')));
         this.app.use('/swagger', express.static(path.join(serverConf.node_path, 'swagger')));
-	}
-
-	_middlewares() {
 		this.app.use('/docs', swaggerUI.serve, swaggerUI.setup(yamlJS.load('./swagger/server.yaml'), false));
+
+        // escape xss
+        this.app.use(require('middleware/init'));
 	}
 
-	_routes() {
-		logger.info(`number of routing module: ${serverConf.routes.length}`);
+	_route() {
+		logger.info(`number of routing module: ${serverConf.route.length}`);
 
 		const methods = [ 'get', 'post', 'put', 'delete' ];
-		const router = express.Router();
+		// const router = express.Router();
 
-		for (const route of serverConf.routes) {
-			const ClassModule = require(`routes/${route.module}`);
+		for (const route of serverConf.route) {
+			const ClassModule = require(`route/${route.module}`);
 			const contClass = new ClassModule();
 
 			for (const url of Object.keys(route)) {
@@ -160,13 +188,18 @@ class Server {
 						continue;
 					}
 
-					router[method](url, contClass[(route[url][method]).handler].bind(contClass));
+					this.app[method](url, contClass[(route[url][method]).handler].bind(contClass));
 				}
 			}
 		}
 
-		this.app.use(router);
+		// this.app.use(router);
 	}
+
+    _etc() {
+        this.app.use(errorHandler.notFound);
+        this.app.use(errorHandler.errorHandler);
+    }
 };
 
 module.exports = Server;

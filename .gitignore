@@ -1,5 +1,5 @@
 npm-debug.log*
-configs/private.js
+config/private.js
 
 node_modules
 logs

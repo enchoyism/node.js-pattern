@@ -1,6 +1,7 @@
 **😬 My favorite node.js webapp basic pattern (with Express.js)**
 
-- os env: mac, linux**
+- **os env: mac, linux**
+- **database: redis, mysql**
 
 # Clone & Add DB access config
 ### Clone
@@ -31,17 +32,6 @@ module.exports = {
             user: '{YOUR_MYSQL_USER}',
             password: '{YOUR_MYSQL_PASSWORD}',
             database: '{YOUR_MYSQL_DATABASE}'
-        }
-    },
-    local: {
-        uri: 'mongodb://127.0.0.1:27017/nodejs',
-        options: {
-            useMongoClient: true,
-            autoIndex: false,
-            reconnectTries: 10,
-            reconnectInterval: 500,
-            poolSize: 10,
-            bufferMaxEntries: 0
         }
     }
 };
