@@ -26,10 +26,10 @@ module.exports = class ModelIndex extends ModelBase {
 	}
 
 	hello() {
-		return this.yell('hello');
+		return this.yell('very hello!');
 	}
 
 	welcome() {
-		return this.yell('welcome');
+		return this.yell('very welcome!');
 	}
 };

@@ -16,9 +16,8 @@ module.exports = class ApiIndex extends ApiBase {
             const welcome = await modelIndex.welcome();
 
             await mysql.commitTransaction(mysql.conn);
-            mysql.pool.release(mysql.conn);
 
-            res.json({ 'messages': [hello, welcome] });
+            res.json({ 'message': `${hello} ${welcome}` });
         } catch (e) {
             await mysql.rollbackTransaction(mysql.conn);
             throw e;

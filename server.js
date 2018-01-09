@@ -72,9 +72,14 @@ class Server {
                 });
             },
             destroy: (connection) => {
-                return new Promise((resolve) => {
-                    connection.destroy();
-                    resolve();
+                return new Promise((resolve, reject) => {
+                    connection.end((error) => {
+                        if (error) {
+                            return reject(error);
+                        }
+
+                        resolve();
+                    })
                 });
             }
         };

@@ -1,12 +1,29 @@
 'use strict';
 
+const ContBase = require('route/cont/base');
+const ModelIndex = require('model/index');
 const serverConf = require('config/server.js');
 
 module.exports = class ContIndex {
-    getIndex(req, res, callback) {
-        res.render('index', {
-        	'title': serverConf.name,
-            'message': `welcome to the ${serverConf.name}`
-        });
+    async getIndex(req, res) {
+        const mysql = req.app.get('mysql');
+
+        try {
+            await mysql.beginTransaction(mysql.conn);
+
+            const modelIndex = new ModelIndex(req, res);
+            const hello = await modelIndex.hello();
+            const welcome = await modelIndex.welcome();
+
+            await mysql.commitTransaction(mysql.conn);
+
+            res.json({
+                'title': serverConf.name,
+                'message': `${hello} ${welcome}`
+            });
+        } catch (e) {
+            await mysql.rollbackTransaction(mysql.conn);
+            throw e;
+        }
     }
 };

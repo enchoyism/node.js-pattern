@@ -102,3 +102,34 @@ $ curl -XGET 'http://localhost:3000/api/index'
 ### swagger
 Access 'http://localhost:3000/docs' with your browser
 
+# Mysql Usage (example)
+### Transaction mode
+The connection will be released automatically when **begin(error), rollback, commit** in transaction mode
+More details
+- [middleware/init.js](https://github.com/enchoyism/nodejs-pattern/blob/master/middleware/init.js)
+- [route/api/index.js](https://github.com/enchoyism/nodejs-pattern/blob/master/route/api/index.js)
+- [model/index.js]((https://github.com/enchoyism/nodejs-pattern/blob/master/model/index.js))
+``` javascript
+// ...dosomething
+
+await mysql.beginTransaction(mysql.conn);
+
+// ...dosomething (await/async & promise db access)
+
+await mysql.commitTransaction(mysql.conn);
+
+// ...dosomething
+```
+
+### General mode
+``` javascript
+// ...dosomething (await/async & promise db access)
+
+// have to release connection back to pool
+mysql.pool.release(mysql.conn);
+
+// ...dosomething
+```
+
+# todo
+- [] on error send message to telegram

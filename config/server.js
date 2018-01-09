@@ -26,12 +26,12 @@ serverConf.route.push(
 	},
 
 	// controller
-	// {
-	// 	module: 'cont/index',
-	// 	'/index': {
-	// 		get: { handler: 'getIndex' }
-	// 	}
-	// }
+	{
+		module: 'cont/index',
+		'/index': {
+			get: { handler: 'getIndex' }
+		}
+	}
 );
 
 serverConf.redis.host = privateConf.redis[serverConf.node_env].host;
@@ -44,7 +44,5 @@ serverConf.mysql.port = privateConf.mysql[serverConf.node_env].port;
 serverConf.mysql.user = privateConf.mysql[serverConf.node_env].user;
 serverConf.mysql.password = privateConf.mysql[serverConf.node_env].password;
 serverConf.mysql.database = privateConf.mysql[serverConf.node_env].database;
-
-// serverConf.mongo = privateConf.mongo;
 
 module.exports = serverConf;
