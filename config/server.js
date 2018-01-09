@@ -13,7 +13,9 @@ const serverConf = {
 	mysql: {},
 	mongo: {},
 
-	route: []
+	route: [],
+
+	telegram: {}
 };
 
 serverConf.route.push(
@@ -44,5 +46,7 @@ serverConf.mysql.port = privateConf.mysql[serverConf.node_env].port;
 serverConf.mysql.user = privateConf.mysql[serverConf.node_env].user;
 serverConf.mysql.password = privateConf.mysql[serverConf.node_env].password;
 serverConf.mysql.database = privateConf.mysql[serverConf.node_env].database;
+
+serverConf.telegram = privateConf.telegram;
 
 module.exports = serverConf;

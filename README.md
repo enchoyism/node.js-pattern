@@ -33,6 +33,10 @@ module.exports = {
             password: '{YOUR_MYSQL_PASSWORD}',
             database: '{YOUR_MYSQL_DATABASE}'
         }
+    },
+    telegram: {
+        token: '{YOUR_TELEGRAM_TOKEN}',
+        chat_id: '{YOUR_CHAT_ID}'
     }
 };
 ```
@@ -108,7 +112,7 @@ The connection will be released automatically when **begin(error), rollback, com
 More details
 - [middleware/init.js](https://github.com/enchoyism/nodejs-pattern/blob/master/middleware/init.js)
 - [route/api/index.js](https://github.com/enchoyism/nodejs-pattern/blob/master/route/api/index.js)
-- [model/index.js]((https://github.com/enchoyism/nodejs-pattern/blob/master/model/index.js))
+- [model/index.js](https://github.com/enchoyism/nodejs-pattern/blob/master/model/index.js)
 ``` javascript
 // ...dosomething
 
@@ -132,4 +136,6 @@ mysql.pool.release(mysql.conn);
 ```
 
 # todo
-- [] on error send message to telegram
+- [ ] error handling
+- [ ] on error send message to telegram
+- [ ] telegram guide
