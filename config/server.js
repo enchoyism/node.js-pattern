@@ -15,7 +15,9 @@ const serverConf = {
 
 	route: [],
 
-	telegram: {}
+	telegram: {},
+
+	errorCodes: {}
 };
 
 serverConf.route.push(
@@ -48,5 +50,13 @@ serverConf.mysql.password = privateConf.mysql[serverConf.node_env].password;
 serverConf.mysql.database = privateConf.mysql[serverConf.node_env].database;
 
 serverConf.telegram = privateConf.telegram;
+
+serverConf.errorCodes = {
+	BAD_REQUEST: 400,
+	UNAUTHORIZED: 401,
+	NOT_FOUND: 404,
+	METHOD_NOT_ALLOWED: 405,
+	INTERNAL_SERVER_ERROR: 500
+};
 
 module.exports = serverConf;

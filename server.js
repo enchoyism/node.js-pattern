@@ -100,17 +100,19 @@ class Server {
             throw error;
         });
 
-        const rollbackTransaction = (connection) => {
+        const rollbackTransaction = () => {
             return new Promise((resolve, reject) => {
-                connection.rollback(() => {
+                const connection = this.app.get('mysql').conn;
+                this.app.get(connection).conn.rollback(() => {
                     pool.release(connection);
                     resolve();
                 });
             });
         };
 
-        const beginTransaction = (connection) => {
+        const beginTransaction = () => {
             return new Promise((resolve, reject) => {
+                const connection = this.app.get('mysql').conn;
                 connection.beginTransaction((error) => {
                     if (error) {
                         return connection.rollback(() => {
@@ -124,8 +126,9 @@ class Server {
             });
         };
 
-        const commitTransaction = (connection) => {
+        const commitTransaction = () => {
             return new Promise((resolve, reject) => {
+                const connection = this.app.get('mysql').conn;
                 connection.commit((error) => {
                     if (error) {
                         return connection.rollback(() => {

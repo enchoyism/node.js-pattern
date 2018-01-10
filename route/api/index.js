@@ -12,13 +12,13 @@ module.exports = class ApiIndex extends ApiBase {
         // request param validation
         const {error} = Joi.validate({
             // data
-        }, Joi.object().keys{
+        }, Joi.object().keys({
             // schema
-        });
+        }));
 
         if (error) {
             throw new ServerError({
-                code: serverConf.codes.BAD_REQUEST,
+                code: serverConf.errorCodes.BAD_REQUEST,
                 message: error.message
             });
         }
@@ -27,17 +27,17 @@ module.exports = class ApiIndex extends ApiBase {
         const mysql = req.app.get('mysql');
 
         try {
-            await mysql.beginTransaction(mysql.conn);
+            await mysql.beginTransaction();
 
             const modelIndex = new ModelIndex(req, res);
             const hello = await modelIndex.hello();
             const welcome = await modelIndex.welcome();
 
-            await mysql.commitTransaction(mysql.conn);
+            await mysql.commitTransaction();
 
             res.json({ 'message': `${hello} ${welcome}` });
         } catch (error) {
-            await mysql.rollbackTransaction(mysql.conn);
+            await mysql.rollbackTransaction();
             throw error;
         }
     }
