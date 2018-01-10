@@ -4,7 +4,7 @@ const Joi = require('joi');
 
 const ContBase = require('route/cont/base');
 const ModelIndex = require('model/index');
-const ServerError = require('lib/server_error');
+const ServerError = require('lib/serverError');
 const serverConf = require('config/server.js');
 
 module.exports = class ContIndex {
@@ -34,13 +34,18 @@ module.exports = class ContIndex {
             const welcome = await modelIndex.welcome();
 
             await mysql.commitTransaction();
+            await mysql.terminate();
 
             res.json({
                 'title': serverConf.name,
                 'message': `${hello} ${welcome}`
             });
         } catch (error) {
-            await mysql.rollbackTransaction();
+            if (mysql.conn) {
+                await mysql.rollbackTransaction();
+                await mysql.terminate();
+            }
+
             throw error;
         }
     }

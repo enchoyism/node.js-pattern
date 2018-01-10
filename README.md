@@ -1,7 +1,9 @@
 **😬 My favorite node.js webapp basic pattern (with Express.js)**
 
-- **os env: mac, linux**
-- **database: redis, mysql**
+# Require
+- **OS: mac, linux**
+- **Database: redis, mysql**
+- **Alarm: telegram token, chat_id**
 
 # Clone & Add DB access config
 ### Clone
@@ -10,9 +12,9 @@ $ git clone https://github.com/enchoyism/nodejs-pattern.git
 $ npm install -d
 ```
 
-### DB access config
+### Config
 **New file(./configs/private.js)**
-Edit {...} to your config
+Edit {...} to your config.
 ``` javascript
 'use strict';
 
@@ -46,13 +48,13 @@ module.exports = {
 $ npm start
 ```
 
-# Start with pm2
+# Cluster start (pm2)
 ``` bash
 $ npm install pm2 -g
 ```
 
 **edit** {YOUR_NODE_PATH} to absolute path (ex. /home/...) of ./server.yaml
-Edit {...} to your config
+Edit {...} to your config.
 ``` YML
 apps:
   - name: nodejs-pattern
@@ -97,7 +99,7 @@ $ pm2 start ./server.yaml --env local
 ```
 
 # Check
-### bash
+### curl
 ``` bash
 $ curl -XGET 'http://localhost:3000/api/index'
 {"message":"welcome to the datahub admin"}
@@ -106,36 +108,49 @@ $ curl -XGET 'http://localhost:3000/api/index'
 ### swagger
 Access 'http://localhost:3000/docs' with your browser
 
-# Mysql Usage (example)
+# Mysql usage sameple
 ### Transaction mode
-The connection will be released automatically when **begin(error), rollback, commit** in transaction mode
-More details
+The connection will be released automatically when **begin(error), rollback, commit** in transaction mode.
 - [middleware/init.js](https://github.com/enchoyism/nodejs-pattern/blob/master/middleware/init.js)
 - [route/api/index.js](https://github.com/enchoyism/nodejs-pattern/blob/master/route/api/index.js)
 - [model/index.js](https://github.com/enchoyism/nodejs-pattern/blob/master/model/index.js)
 ``` javascript
-// ...dosomething
+const mysql = req.app.get('mysql');
 
-await mysql.beginTransaction(mysql.conn);
+try {
+    await mysql.beginTransaction();
 
-// ...dosomething (await/async & promise db access)
+    // ...dosomething (await/async & promise db access)
 
-await mysql.commitTransaction(mysql.conn);
+    await mysql.commitTransaction();
+    await mysql.terminate();
+} catch (error) {
+    if (mysql.conn) {
+        await mysql.rollbackTransaction();
+        await mysql.terminate();
+    }
 
-// ...dosomething
+    throw error;
+}
 ```
 
 ### General mode
 ``` javascript
-// ...dosomething (await/async & promise db access)
-
-// have to release connection back to pool
-mysql.pool.release(mysql.conn);
-
 // ...dosomething
+const mysql = req.app.get('mysql');
+
+try {
+    // ...dosomething (await/async & promise db access)
+} catch (error) {
+    if (mysql.conn) {
+        await mysql.rollbackTransaction();
+        await mysql.terminate();
+    }
+
+    throw error;   
+}
 ```
 
 # todo
-- [ ] error handling
-- [ ] on error send message to telegram
-- [ ] telegram guide
+- [ ] logging.
+- [ ] telegram guide (github.io)

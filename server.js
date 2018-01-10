@@ -103,8 +103,7 @@ class Server {
         const rollbackTransaction = () => {
             return new Promise((resolve, reject) => {
                 const connection = this.app.get('mysql').conn;
-                this.app.get(connection).conn.rollback(() => {
-                    pool.release(connection);
+                connection.rollback(() => {
                     resolve();
                 });
             });
@@ -116,7 +115,6 @@ class Server {
                 connection.beginTransaction((error) => {
                     if (error) {
                         return connection.rollback(() => {
-                            pool.release(connection);
                             return reject(error);
                         });
                     }
@@ -132,22 +130,28 @@ class Server {
                 connection.commit((error) => {
                     if (error) {
                         return connection.rollback(() => {
-                            pool.release(connection);
                             return reject(error);
                         });
                     }
-
-                    pool.release(connection);
+;
                     resolve();
                 })
             });
         };
 
+        const terminate = () => {
+            const pool = this.app.get('mysql').pool;
+            const conn = this.app.get('mysql').conn;
+
+            pool.release(conn);
+            delete this.app.settings.mysql.conn;
+        };
+
         this.app.set('mysql', {
-            pool: pool, conn: undefined,
             beginTransaction: beginTransaction,
             rollbackTransaction: rollbackTransaction,
-            commitTransaction: commitTransaction
+            commitTransaction: commitTransaction,
+            pool: pool, conn: undefined, terminate: terminate
         });
 
         logger.info('database mysql connection pool created.');
