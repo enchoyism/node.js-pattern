@@ -7,6 +7,21 @@ const serverConf = require('config/server.js');
 
 module.exports = class ContIndex {
     async getIndex(req, res) {
+        // request param validation
+        const {error} = Joi.validate({
+            // data
+        }, Joi.object().keys{
+            // schema
+        });
+
+        if (error) {
+            throw new ServerError({
+                code: serverConf.codes.BAD_REQUEST,
+                message: error.message
+            });
+        }
+
+        // mysql
         const mysql = req.app.get('mysql');
 
         try {
@@ -17,14 +32,14 @@ module.exports = class ContIndex {
             const welcome = await modelIndex.welcome();
 
             await mysql.commitTransaction(mysql.conn);
-            throw new ServerError(404);
+
             res.json({
                 'title': serverConf.name,
                 'message': `${hello} ${welcome}`
             });
-        } catch (e) {
+        } catch (error) {
             await mysql.rollbackTransaction(mysql.conn);
-            throw e;
+            throw error;
         }
     }
 };

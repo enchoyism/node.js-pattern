@@ -12,4 +12,4 @@ module.exports = class ModelBase {
 		this.mysql = req.app.get('mysql');
 		this.mongo = req.app.get('mongo');
 	}
-}
+};
