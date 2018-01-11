@@ -34,18 +34,13 @@ module.exports = class ContIndex {
             const welcome = await modelIndex.welcome();
 
             await mysql.commitTransaction();
-            await mysql.terminate();
 
             res.json({
                 'title': serverConf.name,
                 'message': `${hello} ${welcome}`
             });
         } catch (error) {
-            if (mysql.conn) {
-                await mysql.rollbackTransaction();
-                await mysql.terminate();
-            }
-
+            await mysql.rollbackTransaction();
             throw error;
         }
     }

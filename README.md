@@ -147,10 +147,10 @@ try {
         await mysql.terminate();
     }
 
-    throw error;   
+    throw error;
 }
 ```
 
 # todo
-- [ ] logging.
 - [ ] telegram guide (github.io)
+- [ ] test, coverage (istanbul)

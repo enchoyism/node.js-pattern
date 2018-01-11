@@ -12,7 +12,7 @@ const swaggerUI = require('swagger-ui-express');
 const yamlJS = require('yamljs');
 
 const serverConf = require('config/server');
-const logger = require('lib/logger')('server');
+const debug = require('lib/logger').debug('server');
 const errorHandler = require('lib/errorHandler');
 
 class Server {
@@ -27,14 +27,14 @@ class Server {
 		if (redis) {
 			redis.quit();
 			delete this.app.settings.redis;
-			logger.info('database redis client destroyed');
+			debug.info('database redis client destroyed');
 		}
 
 		if (mysql) {
 			await mysql.connectionPool.drain();
 			mysql.connectionPool.clear();
 			delete this.app.settings.mysql;
-			logger.info('database mysql connection pool destroyed');
+			debug.info('database mysql connection pool destroyed');
 		}
 	}
 
@@ -50,7 +50,7 @@ class Server {
 	async _database() {
 		// redis
 		this.app.set('redis', new redis(serverConf.redis));
-		logger.info('database redis client created.');
+		debug.info('database redis client created.');
 
 		// mysql
 		const factory = {
@@ -93,10 +93,10 @@ class Server {
         const pool = genericPool.createPool(factory, options);
 
         pool.on('factoryCreateError', (error) => {
-            logger.error(`factory create error: ${error}`);
+            debug.error(`factory create error: ${error}`);
             throw error;
         }).on('factoryDestroyError', (error) => {
-            logger.error(`factory destroy error: ${error}`);
+            debug.error(`factory destroy error: ${error}`);
             throw error;
         });
 
@@ -133,28 +133,20 @@ class Server {
                             return reject(error);
                         });
                     }
-;
+
                     resolve();
                 })
             });
         };
 
-        const terminate = () => {
-            const pool = this.app.get('mysql').pool;
-            const conn = this.app.get('mysql').conn;
-
-            pool.release(conn);
-            delete this.app.settings.mysql.conn;
-        };
-
         this.app.set('mysql', {
+            pool: pool, conn: undefined,
             beginTransaction: beginTransaction,
             rollbackTransaction: rollbackTransaction,
-            commitTransaction: commitTransaction,
-            pool: pool, conn: undefined, terminate: terminate
+            commitTransaction: commitTransaction
         });
 
-        logger.info('database mysql connection pool created.');
+        debug.info('database mysql connection pool created.');
 	};
 
 	_config() {
@@ -185,7 +177,7 @@ class Server {
 	}
 
 	_route() {
-		logger.info(`number of routing module: ${serverConf.route.length}`);
+		debug.info(`number of routing module: ${serverConf.route.length}`);
 
 		const methods = [ 'get', 'post', 'put', 'delete' ];
 		// const router = express.Router();

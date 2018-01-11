@@ -32,20 +32,15 @@ module.exports = class ApiIndex extends ApiBase {
             const modelIndex = new ModelIndex(req, res);
             const hello = await modelIndex.hello();
             const welcome = await modelIndex.welcome();
-
+            // throw new Error('test');
             await mysql.commitTransaction();
-            await mysql.terminate();
 
             res.json({
                 'title': serverConf.name,
                 'message': `${hello} ${welcome}`
             });
         } catch (error) {
-            if (mysql.conn) {
-                await mysql.rollbackTransaction();
-                await mysql.terminate();
-            }
-
+            await mysql.rollbackTransaction();
             throw error;
         }
     }

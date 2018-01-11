@@ -1,10 +1,14 @@
 npm-debug.log*
+
+log/**
+!log/README.md
+
+pid/**
+!pid/README.md
+
 config/private.js
 
 node_modules
-logs
-pids
-public
 
 .npm
 

@@ -1,6 +1,5 @@
 'use strict';
 
-const logger = require('lib/logger');
 const crypto = require('lib/crypto');
 const ModelBase = require('model/base');
 
