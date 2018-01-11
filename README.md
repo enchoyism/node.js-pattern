@@ -1,6 +1,7 @@
 **😬 My favorite node.js webapp basic pattern (with Express.js)**
 
 # Require
+- **Node.js (ECMAScript 7)**
 - **OS: mac, linux**
 - **Database: redis, mysql**
 - **Alarm: telegram token, chat_id**
@@ -110,7 +111,7 @@ Access 'http://localhost:3000/docs' with your browser
 
 # Mysql usage sameple
 ### Transaction mode
-The connection will be released automatically when **begin(error), rollback, commit** in transaction mode.
+The connection will be released automatically
 - [middleware/init.js](https://github.com/enchoyism/nodejs-pattern/blob/master/middleware/init.js)
 - [route/api/index.js](https://github.com/enchoyism/nodejs-pattern/blob/master/route/api/index.js)
 - [model/index.js](https://github.com/enchoyism/nodejs-pattern/blob/master/model/index.js)
@@ -123,13 +124,8 @@ try {
     // ...dosomething (await/async & promise db access)
 
     await mysql.commitTransaction();
-    await mysql.terminate();
 } catch (error) {
-    if (mysql.conn) {
-        await mysql.rollbackTransaction();
-        await mysql.terminate();
-    }
-
+    await mysql.rollbackTransaction();
     throw error;
 }
 ```
@@ -142,15 +138,10 @@ const mysql = req.app.get('mysql');
 try {
     // ...dosomething (await/async & promise db access)
 } catch (error) {
-    if (mysql.conn) {
-        await mysql.rollbackTransaction();
-        await mysql.terminate();
-    }
-
+    await mysql.rollbackTransaction();
     throw error;
 }
 ```
 
 # todo
-- [ ] telegram guide (github.io)
 - [ ] test, coverage (istanbul)

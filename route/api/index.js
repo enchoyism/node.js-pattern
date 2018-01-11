@@ -32,7 +32,7 @@ module.exports = class ApiIndex extends ApiBase {
             const modelIndex = new ModelIndex(req, res);
             const hello = await modelIndex.hello();
             const welcome = await modelIndex.welcome();
-            // throw new Error('test');
+
             await mysql.commitTransaction();
 
             res.json({
