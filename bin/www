@@ -39,7 +39,7 @@ const onError = (error) => {
     }
 };
 
-const server = Server.bootstrap()
+const server = Server.bootstrap();
 const app = server.app;
 app.set('port', port);
 

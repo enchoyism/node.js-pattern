@@ -31,8 +31,8 @@ class Server {
 		}
 
 		if (mysql) {
-			await mysql.connectionPool.drain();
-			mysql.connectionPool.clear();
+			await mysql.pool.drain();
+			mysql.pool.clear();
 			delete this.app.settings.mysql;
 			debug.info('database mysql connection pool destroyed');
 		}
@@ -115,7 +115,7 @@ class Server {
                 connection.beginTransaction((error) => {
                     if (error) {
                         return connection.rollback(() => {
-                            return reject(error);
+                            reject(error);
                         });
                     }
 
@@ -130,7 +130,7 @@ class Server {
                 connection.commit((error) => {
                     if (error) {
                         return connection.rollback(() => {
-                            return reject(error);
+                            reject(error);
                         });
                     }
 

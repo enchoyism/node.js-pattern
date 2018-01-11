@@ -9,6 +9,5 @@ module.exports = class ModelBase {
 		this.debug = req.app.get('debug');
 		this.redis = req.app.get('redis');
 		this.mysql = req.app.get('mysql');
-		this.mongo = req.app.get('mongo');
 	}
 };
