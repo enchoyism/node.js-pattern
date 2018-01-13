@@ -35,10 +35,11 @@ module.exports = class ContIndex {
 
             await mysql.commitTransaction();
 
-            res.json({
+            res.render('index', {
                 'title': serverConf.name,
                 'message': `${hello} ${welcome}`
             });
+
         } catch (error) {
             await mysql.rollbackTransaction();
             throw error;

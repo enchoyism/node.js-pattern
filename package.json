@@ -6,7 +6,9 @@
     "email": "enchoyism@gmail.com"
   },
   "scripts": {
-    "start": "export NODE_ENV=local & export NODE_PATH=. & export DEBUG=*nodejs-pattern* & node ./bin/www"
+    "start": "export NODE_ENV=local & export NODE_PATH=. & export DEBUG=*nodejs-pattern* & node ./bin/www",
+    "test": "export NODE_ENV=local & export NODE_PATH=. & node ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha -- --timeout=60000 --recursive ./test",
+    "eslint": "node ./node_modules/eslint/bin/eslint --config .eslintrc --ignore-path .eslintignore ."
   },
   "dependencies": {
     "async": "^2.6.0",
@@ -14,13 +16,16 @@
     "cookie-parser": "^1.4.3",
     "debug": "^2.6.9",
     "ejs": "^2.5.7",
+    "eslint": "^4.15.0",
     "express": "^4.15.5",
     "express-asyncify": "^1.0.0",
     "generic-pool": "^3.4.0",
     "ioredis": "^3.2.2",
+    "istanbul": "^1.0.0-alpha.2",
     "joi": "^13.1.0",
     "microtime-nodejs": "^1.0.0",
     "mkdirp": "^0.5.1",
+    "mocha": "^3.2.0",
     "moment": "^2.20.1",
     "mysql": "^2.15.0",
     "package.json": "^2.0.1",
@@ -28,6 +33,7 @@
     "pify": "^3.0.0",
     "prettyjson": "^1.2.1",
     "request": "^2.83.0",
+    "should": "^13.2.1",
     "statuses": "^1.4.0",
     "swagger-ui-express": "^2.0.7",
     "yamljs": "^0.3.0"

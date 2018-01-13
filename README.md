@@ -37,6 +37,11 @@ module.exports = {
             database: '{YOUR_MYSQL_DATABASE}'
         }
     },
+    test: {
+        local: {
+            host: 'http://127.0.0.1'
+        },
+    }
     telegram: {
         token: '{YOUR_TELEGRAM_TOKEN}',
         chat_id: '{YOUR_CHAT_ID}'
@@ -54,23 +59,22 @@ $ npm start
 $ npm install pm2 -g
 ```
 
-**edit** {YOUR_NODE_PATH} to absolute path (ex. /home/...) of ./server.yaml
-Edit {...} to your config.
+**EDIT** {YOUR_REPOSITORY_PATH} to absolute path (ex. /home/...) of ./server.yaml
 ``` YML
 apps:
   - name: nodejs-pattern
-    script: {YOUR_NODE_PATH}/bin/www
-    cmd: {YOUR_NODE_PATH}
+    script: {YOUR_REPOSITORY_PATH}/bin/www
+    cmd: {YOUR_REPOSITORY_PATH}
     interpreter: node
     interpreterArgs: --max-old-space-size=2048 --stack_size=8192
     instances: 0
     exec_mode: cluster
     max_memory_restart: 1G
     log_date_format: YYYY-MM-DD HH:mm:ss Z
-    error_file: {YOUR_NODE_PATH}/logs/nodejs-pattern.err.log
-    out_file: {YOUR_NODE_PATH}/logs/nodejs-pattern.out.log
+    error_file: {YOUR_REPOSITORY_PATH}/logs/nodejs-pattern.err.log
+    out_file: {YOUR_REPOSITORY_PATH}/logs/nodejs-pattern.out.log
     merge_logs: true
-    pid_file: {YOUR_NODE_PATH}/pids/nodejs-pattern.pid
+    pid_file: {YOUR_REPOSITORY_PATH}/pids/nodejs-pattern.pid
     min_uptime: 1000s
     max_restarts: 10
     autorestart: true
@@ -79,19 +83,19 @@ apps:
     restart_delay: 5000
     env_local:
         NODE_ENV: local
-        NODE_PATH: {YOUR_NODE_PATH}
+        NODE_PATH: {YOUR_REPOSITORY_PATH}
         DEBUG: '*nodejs-pattern*'
     env_development:
         NODE_ENV: development
-        NODE_PATH: {YOUR_NODE_PATH}
+        NODE_PATH: {YOUR_REPOSITORY_PATH}
         DEBUG: '*nodejs-pattern*'
     env_stage:
         NODE_ENV: stage
-        NODE_PATH: {YOUR_NODE_PATH}
+        NODE_PATH: {YOUR_REPOSITORY_PATH}
         DEBUG: '*nodejs-pattern*'
     env_production:
         NODE_ENV: production
-        NODE_PATH: {YOUR_NODE_PATH}
+        NODE_PATH: {YOUR_REPOSITORY_PATH}
         DEBUG: '*nodejs-pattern*'
 ```
 
@@ -143,5 +147,35 @@ try {
 }
 ```
 
-# todo
-- [ ] test, coverage (istanbul)
+# Test & Coverage (istanbul)
+### Execute
+``` bash
+$ npm test
+> export NODE_ENV=local & export NODE_PATH=. & node ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha -- --timeout=60000 --recursive ./test
+
+
+
+  api/index
+    GET: /index
+      ✓ hello welcome message (62ms)
+
+  cont/index
+    GET: /index
+      ✓ hello welcome message
+
+
+  2 passing (597ms)
+
+
+=============================== Coverage summary ===============================
+Statements   : 76.61% ( 226/295 )
+Branches     : 34.48% ( 20/58 )
+Functions    : 63.79% ( 37/58 )
+Lines        : 76.61% ( 226/295 )
+================================================================================
+```
+
+### Browser
+``` bash
+$ open coverage/lcov-report/index.html
+```

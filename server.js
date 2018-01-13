@@ -168,7 +168,7 @@ class Server {
 
     _middleware() {
         // swagger
-        this.app.use('/swagger', express.static(path.join(serverConf.node_path, 'public')));
+        this.app.use('/', express.static(path.join(serverConf.node_path, 'public')));
         this.app.use('/swagger', express.static(path.join(serverConf.node_path, 'swagger')));
 		this.app.use('/docs', swaggerUI.serve, swaggerUI.setup(yamlJS.load('./swagger/server.yaml'), false));
 
@@ -180,7 +180,6 @@ class Server {
 		debug.info(`number of routing module: ${serverConf.route.length}`);
 
 		const methods = [ 'get', 'post', 'put', 'delete' ];
-		// const router = express.Router();
 
 		for (const route of serverConf.route) {
 			const ClassModule = require(`route/${route.module}`);
@@ -196,8 +195,6 @@ class Server {
 				}
 			}
 		}
-
-		// this.app.use(router);
 	}
 
     _etc() {

@@ -1,12 +1,9 @@
-#!/usr/bin/env node
-
 'use strict';
 
 const http = require('http');
 const prettyjson = require('prettyjson');
 
-const alarm = require('lib/alarm');
-const debug = require('lib/logger').debug('bin/www');
+const debug = require('lib/logger').debug('test/bootstrap');
 const serverConf = require('config/server');
 const Server = require('server');
 
@@ -46,25 +43,13 @@ app.set('port', port);
 
 const httpServer = http.createServer(app);
 
-const onListening = () => {
-    const addr = httpServer.address();
-    const bind = typeof addr === 'string'
-        ? 'pipe ' + addr
-        : 'port ' + addr.port;
-    debug.info(`Listening on ${bind}`);
-};
-
-httpServer.listen(port);
-httpServer.on('error', onError);
-httpServer.on('listening', onListening);
-
 const close = () => {
     debug.info('closing server');
 
-    setTimeout(() => {
+    setTimeout(async () => {
         server.destroy();
         httpServer.close(() => {
-            debug.info('closed http server');
+        	debug.info('closed http server');
         });
     }, 500);
 };
@@ -95,3 +80,35 @@ process.on('SIGTERM' || 'SIGINT', () => {
         process.exit(0);
     }, 500);
 });
+
+before((done) => {
+	httpServer.listen(port);
+	httpServer.on('error', onError);
+	httpServer.on('listening', () => {
+		const addr = httpServer.address();
+	    const bind = typeof addr === 'string'
+	        ? 'pipe ' + addr
+	        : 'port ' + addr.port;
+	    debug.info(`Listening on ${bind}`);
+
+	    done();
+	});
+});
+
+after((done) => {
+	debug.info('closing server');
+
+    setTimeout(() => {
+        server.destroy();
+        httpServer.close(() => {
+        	debug.info('closed http server');
+        	done();
+        });
+
+    }, 500);
+});
+
+process.env.NODE_ENV = process.env.NODE_ENV || 'local';
+
+const config = { local: { host: 'http://127.0.0.1:3000' } };
+module.exports = config;

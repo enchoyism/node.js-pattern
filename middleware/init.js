@@ -71,9 +71,9 @@ module.exports = async (req, res, callback) => {
                 http_version: req.httpVersion,
                 remote_addr: req.headers['x-forwarded-for'] || req.connection.remoteAddress
             },
-            log_path: logpath,
             identifier: identifier,
-            servername: process.env.HOSTNAME || ''
+            servername: process.env.HOSTNAME || '',
+            log_path: logpath
         };
 
         const options = { noColor: true, indent: 2 };
