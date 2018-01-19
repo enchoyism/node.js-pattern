@@ -59,26 +59,30 @@ module.exports = async (req, res, callback) => {
         const logdir = `${path.join(__dirname, '../log')}/${moment().format('YYYY/MM/DD')}`;
         const logfile = `${identifier}.log`;
         const logpath = (`${logdir}/${logfile}}`).replace(/\//g, path.sep);
-        let logdata = {
-            request: {
-                method: req.method,
-                url: req.url,
-                cookie: req.cookies,
-                header: req.headers,
-                param: req.params,
-                query: req.query,
-                body: req.body,
-                http_version: req.httpVersion,
-                remote_addr: req.headers['x-forwarded-for'] || req.connection.remoteAddress
-            },
+        let logdata = req.app.get('logdata') ? req.app.get('logdata') : {
             identifier: identifier,
             servername: process.env.HOSTNAME || '',
-            log_path: logpath
+            log_path: logpath,
+            meta: {
+                code: res.statusCode,
+                message: res.statusMessage,
+                indentifier: crypto.identifier(req)
+            },
+            request: {
+                method: req.method, url: req.url, cookie: req.cookies,
+                header: req.headers, param: req.params, query: req.query,
+                body: req.body, http_version: req.httpVersion,
+                remote_addr: req.headers['x-forwarded-for'] || req.connection.remoteAddress
+            },
+            response: {
+                header: res.getHeaders()
+            }
         };
+
+        delete this.app.settings.logdata;
 
         const options = { noColor: true, indent: 2 };
         logdata = prettyjson.render(logdata, options);
-
         logger.save(debug, logdir, logfile, logdata);
     });
 
