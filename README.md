@@ -113,7 +113,7 @@ $ curl -XGET 'http://localhost:3000/api/index'
 ### swagger
 Access 'http://localhost:3000/docs' with your browser
 
-# Mysql usage sameple
+# Mysql usage sample
 ### Transaction mode
 The connection will be released automatically
 - [middleware/init.js](https://github.com/enchoyism/nodejs-pattern/blob/master/middleware/init.js)
