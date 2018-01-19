@@ -16,44 +16,44 @@ const debug = require('lib/logger').debug('server');
 const errorHandler = require('lib/errorHandler');
 
 class Server {
-	static bootstrap() {
-		return new Server();
-	}
+    static bootstrap() {
+        return new Server();
+    }
 
-	async destroy() {
-		const redis = this.app.get('redis');
-		const mysql = this.app.get('mysql');
+    async destroy() {
+        const redis = this.app.get('redis');
+        const pool = this.app.get('pool');
 
-		if (redis) {
-			redis.quit();
-			delete this.app.settings.redis;
-			debug.info('database redis client destroyed');
-		}
+        if (redis) {
+            redis.quit();
+            delete this.app.settings.redis;
+            debug.info('database redis client destroyed');
+        }
 
-		if (mysql) {
-			await mysql.pool.drain();
-			mysql.pool.clear();
-			delete this.app.settings.mysql;
-			debug.info('database mysql connection pool destroyed');
-		}
-	}
+        if (pool) {
+            await pool.drain();
+            pool.clear();
+            delete this.app.settings.pool;
+            debug.info('database mysql connection pool destroyed');
+        }
+    }
 
-	constructor() {
-		this.app = asyncify(express());
-		this._database();
-		this._config();
-		this._middleware();
-		this._route();
+    constructor() {
+        this.app = asyncify(express());
+        this._database();
+        this._config();
+        this._middleware();
+        this._route();
         this._etc();
-	}
+    }
 
-	async _database() {
-		// redis
-		this.app.set('redis', new redis(serverConf.redis));
-		debug.info('database redis client created.');
+    async _database() {
+        // redis
+        this.app.set('redis', new redis(serverConf.redis));
+        debug.info('database redis client created.');
 
-		// mysql
-		const factory = {
+        // mysql
+        const factory = {
             create: () => {
                 return new Promise((resolve, reject) => {
                     const connection = mysql.createConnection(serverConf.mysql);
@@ -84,7 +84,7 @@ class Server {
             }
         };
 
-		const options = {
+        const options = {
             min: 0, max: 10,
             acquireTimeoutMillis: 3000,
             idleTimeoutMillis : 30000
@@ -100,57 +100,12 @@ class Server {
             throw error;
         });
 
-        const rollbackTransaction = () => {
-            return new Promise((resolve, reject) => {
-                const connection = this.app.get('mysql').conn;
-                connection.rollback(() => {
-                    resolve();
-                });
-            });
-        };
-
-        const beginTransaction = () => {
-            return new Promise((resolve, reject) => {
-                const connection = this.app.get('mysql').conn;
-                connection.beginTransaction((error) => {
-                    if (error) {
-                        return connection.rollback(() => {
-                            reject(error);
-                        });
-                    }
-
-                    resolve();
-                });
-            });
-        };
-
-        const commitTransaction = () => {
-            return new Promise((resolve, reject) => {
-                const connection = this.app.get('mysql').conn;
-                connection.commit((error) => {
-                    if (error) {
-                        return connection.rollback(() => {
-                            reject(error);
-                        });
-                    }
-
-                    resolve();
-                })
-            });
-        };
-
-        this.app.set('mysql', {
-            pool: pool, conn: undefined,
-            beginTransaction: beginTransaction,
-            rollbackTransaction: rollbackTransaction,
-            commitTransaction: commitTransaction
-        });
-
+        this.app.set('pool', pool);
         debug.info('database mysql connection pool created.');
-	};
+    };
 
-	_config() {
-		this.app.get('/favicon.ico', (req, res) => {
+    _config() {
+        this.app.get('/favicon.ico', (req, res) => {
             res.sendStatus(204);
         });
 
@@ -170,32 +125,32 @@ class Server {
         // swagger
         this.app.use('/', express.static(path.join(serverConf.node_path, 'public')));
         this.app.use('/swagger', express.static(path.join(serverConf.node_path, 'swagger')));
-		this.app.use('/docs', swaggerUI.serve, swaggerUI.setup(yamlJS.load('./swagger/server.yaml'), false));
+        this.app.use('/docs', swaggerUI.serve, swaggerUI.setup(yamlJS.load('./swagger/server.yaml'), false));
 
         // escape xss
         this.app.use(require('middleware/init'));
-	}
+    }
 
-	_route() {
-		debug.info(`number of routing module: ${serverConf.route.length}`);
+    _route() {
+        debug.info(`number of routing module: ${serverConf.route.length}`);
 
-		const methods = [ 'get', 'post', 'put', 'delete' ];
+        const methods = [ 'get', 'post', 'put', 'delete' ];
 
-		for (const route of serverConf.route) {
-			const ClassModule = require(`route/${route.module}`);
-			const contClass = new ClassModule();
+        for (const route of serverConf.route) {
+            const ClassModule = require(`route/${route.module}`);
+            const contClass = new ClassModule();
 
-			for (const url of Object.keys(route)) {
-				for (const method of methods) {
-					if (!route[url][method]) {
-						continue;
-					}
+            for (const url of Object.keys(route)) {
+                for (const method of methods) {
+                    if (!route[url][method]) {
+                        continue;
+                    }
 
-					this.app[method](url, contClass[(route[url][method]).handler].bind(contClass));
-				}
-			}
-		}
-	}
+                    this.app[method](url, contClass[(route[url][method]).handler].bind(contClass));
+                }
+            }
+        }
+    }
 
     _etc() {
         this.app.use(errorHandler.notFound);

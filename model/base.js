@@ -6,8 +6,8 @@ module.exports = class ModelBase {
 	constructor(req, res) {
 		this.req = req;
 		this.res = res;
-		this.debug = req.app.get('debug');
+		this.mysql = req.mysql;
 		this.redis = req.app.get('redis');
-		this.mysql = req.app.get('mysql');
+		this.debug = req.app.get('debug');
 	}
 };

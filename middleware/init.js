@@ -8,15 +8,72 @@ const prettyjson = require('prettyjson');
 const crypto = require('lib/crypto');
 const logger = require('lib/logger');
 
+class WrapMysql {
+    constuctor() {}
+    initailize(req, res) {
+        this.pool = req.app.get('pool');
+
+        return new Promise(async (resolve, reject) => {
+            try {
+                const conn = await this.pool.acquire();
+                this.conn = conn;
+
+                resolve(conn);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+    release() {
+        if (!this.conn) return;
+        this.pool.release(this.conn);
+        this.conn = undefined;
+    }
+    beginTransaction() {
+        return new Promise(async (resolve, reject) => {
+            this.conn.beginTransaction((error) => {
+                if (error) {
+                    return this.conn.rollback(() => {
+                        reject(error);
+                    });
+                }
+
+                resolve();
+            });
+        });
+    }
+    commitTransaction() {
+        return new Promise((resolve, reject) => {
+            this.conn.commit((error) => {
+                if (error) {
+                    return this.conn.rollback(() => {
+                        reject(error);
+                    });
+                }
+
+                resolve();
+            })
+        });
+    }
+    rollbackTransaction() {
+        return new Promise(async (resolve, reject) => {
+            this.conn.rollback(() => {
+                resolve();
+            });
+        });
+    }
+};
+
 module.exports = async (req, res, callback) => {
     // logger
     const identifier = crypto.identifier(req);
     const debug = logger.debug(identifier);
     req.app.set('debug', debug);
 
-    // get connection
-    const mysql = req.app.get('mysql');
-    mysql.conn = await mysql.pool.acquire();
+    // initailize mysql -> request context
+    const wrapMysql = new WrapMysql();
+    await wrapMysql.initailize(req, res);
+    req.mysql = wrapMysql;
 
     // escape xss
     const xssFilter = (str) => {
@@ -48,41 +105,34 @@ module.exports = async (req, res, callback) => {
     }
 
     res.on('finish', () => {
-        // release connection
-        if (mysql.conn) {
-            debug.debug('mysql connection pool release connection.');
-            mysql.pool.release(mysql.conn);
-            delete req.app.settings.mysql.conn;
-        }
+        // release auto connection
+        debug.debug('mysql connection pool release connection automatically.');
+        wrapMysql.release();
 
         // log save
         const logdir = `${path.join(__dirname, '../log')}/${moment().format('YYYY/MM/DD')}`;
         const logfile = `${identifier}.log`;
         const logpath = (`${logdir}/${logfile}}`).replace(/\//g, path.sep);
-        let logdata = req.app.get('logdata') ? req.app.get('logdata') : {
-            identifier: identifier,
-            servername: process.env.HOSTNAME || '',
-            log_path: logpath,
-            meta: {
-                code: res.statusCode,
-                message: res.statusMessage,
-                indentifier: crypto.identifier(req)
-            },
+        let logdata = {
             request: {
-                method: req.method, url: req.url, cookie: req.cookies,
-                header: req.headers, param: req.params, query: req.query,
-                body: req.body, http_version: req.httpVersion,
+                method: req.method,
+                url: req.url,
+                cookie: req.cookies,
+                header: req.headers,
+                param: req.params,
+                query: req.query,
+                body: req.body,
+                http_version: req.httpVersion,
                 remote_addr: req.headers['x-forwarded-for'] || req.connection.remoteAddress
             },
-            response: {
-                header: res.getHeaders()
-            }
+            identifier: identifier,
+            servername: process.env.HOSTNAME || '',
+            log_path: logpath
         };
-
-        delete this.app.settings.logdata;
 
         const options = { noColor: true, indent: 2 };
         logdata = prettyjson.render(logdata, options);
+
         logger.save(debug, logdir, logfile, logdata);
     });
 

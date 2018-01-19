@@ -23,16 +23,13 @@ module.exports = class ContIndex {
             });
         }
 
-        // mysql
-        const mysql = req.app.get('mysql');
-
         try {
-            await mysql.beginTransaction();
+            const mysql = req.mysql;
 
+            await mysql.beginTransaction();
             const modelIndex = new ModelIndex(req, res);
             const hello = await modelIndex.hello();
             const welcome = await modelIndex.welcome();
-
             await mysql.commitTransaction();
 
             res.render('index', {

@@ -6,8 +6,8 @@
     "email": "enchoyism@gmail.com"
   },
   "scripts": {
-    "start": "export NODE_ENV=local & export NODE_PATH=. & export DEBUG=*nodejs-pattern* & node ./bin/www",
-    "test": "export NODE_ENV=local & export NODE_PATH=. & node ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha -- --timeout=60000 --recursive ./test",
+    "start": "export NODE_ENV=local && export NODE_PATH=. && export DEBUG=*nodejs-pattern* && node ./bin/www",
+    "test": "export NODE_ENV=local && export NODE_PATH=. && node ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha -- --timeout=60000 --recursive ./test",
     "eslint": "node ./node_modules/eslint/bin/eslint --config .eslintrc --ignore-path .eslintignore ."
   },
   "dependencies": {
