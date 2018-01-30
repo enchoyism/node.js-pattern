@@ -1,3 +1,7 @@
 'use strict';
 
-module.exports = class ApiBase {};
+module.exports = class ApiBase {
+    constructor(req, res) {
+
+    }
+};

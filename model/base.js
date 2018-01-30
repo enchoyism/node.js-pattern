@@ -7,7 +7,7 @@ module.exports = class ModelBase {
 		this.req = req;
 		this.res = res;
 		this.mysql = req.mysql;
-		this.redis = req.app.get('redis');
-		this.debug = req.app.get('debug');
+		this.debug = req.debug;
+        this.redis = req.app.get('redis');
 	}
 };

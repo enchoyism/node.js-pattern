@@ -8,6 +8,10 @@ const ServerError = require('lib/serverError');
 const serverConf = require('config/server');
 
 module.exports = class ApiIndex extends ApiBase {
+    constructor(req, res) {
+        super(req, res);
+    }
+
     async getIndex(req, res) {
         // request param validation
         const {error} = Joi.validate({

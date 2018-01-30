@@ -1,3 +1,7 @@
 'use strict';
 
-module.exports = class ContBase {};
+module.exports = class ContBase {
+    constructor(req, res) {
+
+    }
+};

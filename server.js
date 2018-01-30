@@ -134,19 +134,30 @@ class Server {
     _route() {
         debug.info(`number of routing module: ${serverConf.route.length}`);
 
-        const methods = [ 'get', 'post', 'put', 'delete' ];
 
         for (const route of serverConf.route) {
             const ClassModule = require(`route/${route.module}`);
-            const contClass = new ClassModule();
 
             for (const url of Object.keys(route)) {
+
+                const methods = [ 'get', 'post', 'put', 'delete' ];
+
                 for (const method of methods) {
                     if (!route[url][method]) {
                         continue;
                     }
 
-                    this.app[method](url, contClass[(route[url][method]).handler].bind(contClass));
+                    this.app[method](url, (req, res, callback) => {
+                        new ClassModule(req, res)[(route[url][method]).handler](req, res, callback);
+                    });
+
+                    methods.splice(methods.indexOf(method), 1);
+                }
+
+                for (const method of methods) {
+                    this.app[method](url, (req, res, callback) => {
+                        errorHandler.methodNotAllowed(req, res, callback);
+                    });
                 }
             }
         }

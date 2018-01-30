@@ -7,7 +7,11 @@ const ModelIndex = require('model/index');
 const ServerError = require('lib/serverError');
 const serverConf = require('config/server.js');
 
-module.exports = class ContIndex {
+module.exports = class ContIndex extends ContBase {
+    constructor(req, res) {
+        super(req, res);
+    }
+
     async getIndex(req, res) {
         // request param validation
         const {error} = Joi.validate({

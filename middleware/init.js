@@ -67,8 +67,7 @@ class WrapMysql {
 module.exports = async (req, res, callback) => {
     // logger
     const identifier = crypto.identifier(req);
-    const debug = logger.debug(identifier);
-    req.app.set('debug', debug);
+    req.debug = logger.debug(identifier);
 
     // initailize mysql -> request context
     const wrapMysql = new WrapMysql();
@@ -106,7 +105,7 @@ module.exports = async (req, res, callback) => {
 
     res.on('finish', () => {
         // release auto connection
-        debug.debug('mysql connection pool release connection automatically.');
+        req.debug.debug('mysql connection pool release connection automatically.');
         wrapMysql.release();
 
         // log save
@@ -133,7 +132,7 @@ module.exports = async (req, res, callback) => {
         const options = { noColor: true, indent: 2 };
         logdata = prettyjson.render(logdata, options);
 
-        logger.save(debug, logdir, logfile, logdata);
+        logger.save(req.debug, logdir, logfile, logdata);
     });
 
     callback();
