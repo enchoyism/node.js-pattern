@@ -28,13 +28,13 @@ module.exports = class ContIndex extends ContBase {
         }
 
         try {
-            const mysql = req.mysql;
+            await this.mysql.beginTransaction();
 
-            await mysql.beginTransaction();
             const modelIndex = new ModelIndex(req, res);
             const hello = await modelIndex.hello();
             const welcome = await modelIndex.welcome();
-            await mysql.commitTransaction();
+
+            await this.mysql.commitTransaction();
 
             res.render('index', {
                 'title': serverConf.name,
@@ -42,7 +42,7 @@ module.exports = class ContIndex extends ContBase {
             });
 
         } catch (error) {
-            await mysql.rollbackTransaction();
+            await this.mysql.rollbackTransaction();
             throw error;
         }
     }

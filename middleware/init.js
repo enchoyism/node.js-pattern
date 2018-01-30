@@ -8,8 +8,7 @@ const prettyjson = require('prettyjson');
 const crypto = require('lib/crypto');
 const logger = require('lib/logger');
 
-class WrapMysql {
-    constuctor() {}
+class InitMysql {
     initailize(req, res) {
         this.pool = req.app.get('pool');
 
@@ -70,9 +69,9 @@ module.exports = async (req, res, callback) => {
     req.debug = logger.debug(identifier);
 
     // initailize mysql -> request context
-    const wrapMysql = new WrapMysql();
-    await wrapMysql.initailize(req, res);
-    req.mysql = wrapMysql;
+    const initMysql = new InitMysql();
+    await initMysql.initailize(req, res);
+    req.mysql = initMysql;
 
     // escape xss
     const xssFilter = (str) => {
@@ -106,7 +105,7 @@ module.exports = async (req, res, callback) => {
     res.on('finish', () => {
         // release auto connection
         req.debug.debug('mysql connection pool release connection automatically.');
-        wrapMysql.release();
+        initMysql.release();
 
         // log save
         const logdir = `${path.join(__dirname, '../log')}/${moment().format('YYYY/MM/DD')}`;
