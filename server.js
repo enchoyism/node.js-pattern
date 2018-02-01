@@ -50,7 +50,7 @@ class Server {
     async _database() {
         // redis
         this.app.set('redis', new redis(serverConf.redis));
-        debug.info('database redis client created.');
+        debug.info('database redis client created');
 
         // mysql
         const factory = {
@@ -66,42 +66,53 @@ class Server {
                         resolve(connection);
                     });
 
-                    connection.on('error', (error) => {
-                        throw error;
+                    connection.on('error', async (error) => {
+                        if (error.code === 'PROTOCOL_CONNECTION_LOST') {
+                            debug.info('database mysql connection lost');
+
+                            const pool = this.app.get('pool');
+
+                            if (pool) {
+                                await pool.drain();
+                                pool.clear();
+                                delete this.app.settings.pool;
+                                debug.info('database mysql origin connection pool destroyed');
+                            }
+
+                            this.app.set('pool', initPool());
+                            debug.info('database mysql connection pool re created');
+                        } else {
+                            throw error;
+                        }
                     });
                 });
             },
             destroy: (connection) => {
-                return new Promise((resolve, reject) => {
-                    connection.end((error) => {
-                        if (error) {
-                            return reject(error);
-                        }
-
-                        resolve();
-                    })
+                return new Promise((resolve) => {
+                    connection.destroy();
+                    resolve();
                 });
             }
         };
 
-        const options = {
-            min: 0, max: 10,
-            acquireTimeoutMillis: 3000,
-            idleTimeoutMillis : 30000
+        const initPool = () => {
+            const pool = genericPool.createPool(factory, {
+                min: 0, max: 10,
+                acquireTimeoutMillis: 3000,
+                idleTimeoutMillis : 30000
+            });
+
+            pool.on('factoryCreateError', (error) => {
+                debug.error(`factory create error: ${error}`);
+            }).on('factoryDestroyError', (error) => {
+                debug.error(`factory destroy error: ${error}`);
+            });
+
+            return pool;
         };
 
-        const pool = genericPool.createPool(factory, options);
-
-        pool.on('factoryCreateError', (error) => {
-            debug.error(`factory create error: ${error}`);
-            throw error;
-        }).on('factoryDestroyError', (error) => {
-            debug.error(`factory destroy error: ${error}`);
-            throw error;
-        });
-
-        this.app.set('pool', pool);
-        debug.info('database mysql connection pool created.');
+        this.app.set('pool', initPool());
+        debug.info('database mysql connection pool created');
     };
 
     _config() {
