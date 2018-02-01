@@ -145,7 +145,6 @@ class Server {
     _route() {
         debug.info(`number of routing module: ${serverConf.route.length}`);
 
-
         for (const route of serverConf.route) {
             const ClassModule = require(`route/${route.module}`);
 
