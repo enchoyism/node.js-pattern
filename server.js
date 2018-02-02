@@ -134,7 +134,7 @@ class Server {
 
     _middleware() {
         // swagger
-        this.app.use('/', express.static(path.join(serverConf.node_path, 'public')));
+        this.app.use('/public', express.static(path.join(serverConf.node_path, 'public')));
         this.app.use('/swagger', express.static(path.join(serverConf.node_path, 'swagger')));
         this.app.use('/docs', swaggerUI.serve, swaggerUI.setup(yamlJS.load('./swagger/server.yaml'), false));
 
@@ -157,8 +157,12 @@ class Server {
                         continue;
                     }
 
-                    this.app[method](url, (req, res, callback) => {
-                        new ClassModule(req, res)[(route[url][method]).handler](req, res, callback);
+                    this.app[method](url, async (req, res, callback) => {
+                        try {
+                            await new ClassModule(req, res)[(route[url][method]).handler](req, res, callback);
+                        } catch (error) {
+                            throw error;
+                        }
                     });
 
                     methods.splice(methods.indexOf(method), 1);
